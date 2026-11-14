@@ -1,4 +1,4 @@
-# Checks and tests on every push and pull request; deploys site/ to GitHub Pages from main.
+# Checks and tests on every push and pull request; optionally deploys site/ to GitHub Pages from main.
 name: CI and Pages
 
 on:
@@ -33,8 +33,10 @@ jobs:
       - name: Python, C++ and Java tests
         run: node tools/run_tests.js
 
+  # Off until Pages is available (public repo or paid plan): set the repository
+  # variable PAGES_ENABLED=true and choose "GitHub Actions" as the Pages source.
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: vars.PAGES_ENABLED == 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: test
     runs-on: ubuntu-latest
     permissions:

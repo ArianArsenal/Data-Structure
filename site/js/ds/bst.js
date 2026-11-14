@@ -38,6 +38,8 @@
         ['Search', 'O(log n)', 'O(n)'],
         ['Delete', 'O(log n)', 'O(n)'],
         ['In-order traversal', 'O(n)', 'O(n)'],
+        ['Minimum / maximum', 'O(log n)', 'O(n)'],
+        ['Successor', 'O(log n)', 'O(n)'],
       ],
       space: 'O(n), plus O(h) recursion stack',
       notes: 'Insert 10, 20, 30, 40, 50 in order to see the worst case: the tree degenerates into a list. AVL and red-black trees fix this by rebalancing.',
@@ -78,6 +80,12 @@
       ['50 30 70 80', 'delete', [70]],
       ['50 30 70', 'delete', [99]],
       ['50 30 70', 'inorder', []],
+      ['50 30 70 20', 'minimum', []],
+      ['', 'minimum', []],
+      ['50 30 70 80', 'maximum', []],
+      ['', 'maximum', []],
+      ['50 30 70 20 40', 'successor', [40]],
+      ['50 30 70', 'successor', [70]],
     ],
 
     ops: [
@@ -253,6 +261,65 @@
           t.step('done', `In-order traversal: [${result.join(', ')}]. A BST always yields its keys in sorted order.`, { result }, { ok: true });
         },
       },
+      extreme('minimum', 'left'),
+      extreme('maximum', 'right'),
+      {
+        id: 'successor',
+        label: 'successor(key)',
+        args: [{ name: 'key', default: 40 }],
+        run(t, m, key) {
+          let succ = null;
+          let curr = m.root;
+          const v = () => ({ key, succ, curr });
+          t.step('start', `Find the smallest key greater than ${key}. succ = %null%; start at the root.`, v(), { hl: hl(curr, 'active') });
+          for (;;) {
+            t.step('loop', curr ? `curr is ${curr.key}.` : 'Fell off the tree.', v(), { hl: hl(curr, 'active', succ, 'found') });
+            if (!curr) break;
+            const less = key < curr.key;
+            t.step(
+              'compare',
+              `Is ${key} < ${curr.key}? ${less ? `Yes: ${curr.key} is a candidate, but a smaller one may be to the left.` : 'No: the successor must be to the right.'}`,
+              v(),
+              { hl: hl(curr, 'active', succ, 'found') }
+            );
+            t.mark(curr.id, 'visited');
+            if (less) {
+              succ = curr;
+              t.step('remember', `succ = ${succ.key}.`, v(), { hl: hl(succ, 'found') });
+              curr = curr.left;
+              t.step('go_left', `Go left to ${name(curr)}.`, v(), { hl: hl(curr, 'active', succ, 'found') });
+            } else {
+              curr = curr.right;
+              t.step('go_right', `Go right to ${name(curr)}.`, v(), { hl: hl(curr, 'active', succ, 'found') });
+            }
+          }
+          t.step('done', succ ? `The successor of ${key} is ${succ.key}.` : `Nothing in the tree is greater than ${key}: return %null%.`, v(), { hl: hl(succ, 'found'), ok: !!succ });
+        },
+      },
     ],
   });
+
+  // minimum walks left, maximum walks right; otherwise identical.
+  function extreme(id, side) {
+    return {
+      id,
+      label: `${id}()`,
+      args: [],
+      run(t, m) {
+        t.step('check_empty', m.root ? 'The tree is not empty.' : 'The tree is empty.', {});
+        if (!m.root) return t.step('empty', 'Return %null%.', {}, { ok: false });
+        let curr = m.root;
+        t.step('start', `Start at the root and keep going ${side}.`, { curr }, { hl: hl(curr, 'active') });
+        for (;;) {
+          const next = curr[side];
+          t.step('loop', next ? `${curr.key} has a ${side} child.` : `${curr.key} has no ${side} child, so it is the ${id}.`, { curr }, { hl: hl(curr, next ? 'active' : 'found') });
+          if (!next) break;
+          t.mark(curr.id, 'visited');
+          curr = next;
+          t.step(side === 'left' ? 'go_left' : 'go_right', `Go ${side} to ${curr.key}.`, { curr }, { hl: hl(curr, 'active') });
+        }
+        t.step('done', `The ${id} is ${curr.key}.`, { curr }, { hl: hl(curr, 'found'), ok: true });
+      },
+    };
+  }
 })(typeof window !== 'undefined' ? window : globalThis);

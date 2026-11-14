@@ -1,5 +1,6 @@
 """Hash map with separate chaining: each bucket is a linked list of entries.
-Keys are non-negative integers; the hash is key % capacity.
+Keys are non-negative integers; the hash is key % capacity. When size exceeds
+capacity (load factor > 1) the table doubles and every entry is rehashed.
 
 `# @step` / `# @op` markers drive the visualizer; see tools/build_code.js.
 """
@@ -30,6 +31,20 @@ class HashTableChaining:
             curr = curr.next  # @step advance
         self.buckets[i] = Entry(key, value, self.buckets[i])  # @step prepend
         self.size += 1  # @step done
+        if self.size > len(self.buckets):  # @step check_load
+            self._resize(2 * len(self.buckets))  # @step grow
+
+    def _resize(self, capacity):
+        old = self.buckets  # @step rs_old
+        self.buckets = [None] * capacity  # @step rs_alloc
+        for head in old:  # @step rs_bucket
+            curr = head
+            while curr is not None:  # @step rs_loop
+                nxt = curr.next  # @step rs_save
+                i = curr.key % capacity  # @step rs_hash
+                curr.next = self.buckets[i]  # @step rs_move
+                self.buckets[i] = curr
+                curr = nxt
     # @endop
 
     # @op get

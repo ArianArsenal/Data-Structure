@@ -1,10 +1,14 @@
-"""Red-black tree (insert). Invariants: the root is black, a red node has no red
+"""Red-black tree (insert and delete). Invariants: the root is black, a red node has no red
 child, and every root-to-leaf path has the same number of black nodes.
 
 `# @step` / `# @op` markers drive the visualizer; see tools/build_code.js.
 """
 
 RED, BLACK = "red", "black"
+
+
+def color(node):
+    return node.color if node is not None else BLACK  # empty leaves count as black
 
 
 class Node:
@@ -80,6 +84,59 @@ class RedBlackTree:
             g.left = x
         else:
             g.right = x
+    # @endop
+
+    # @op delete
+    def delete(self, key):
+        z = self.root  # @step start
+        while z is not None and z.key != key:  # @step search
+            z = z.left if key < z.key else z.right
+        if z is None:  # @step check_found
+            return False  # @step not_found
+        if z.left is not None and z.right is not None:  # @step check_two
+            s = z.right  # @step find_succ
+            while s.left is not None:
+                s = s.left
+            z.key = s.key  # @step copy_key
+            z = s
+        child = z.left if z.left is not None else z.right  # @step splice
+        parent = z.parent
+        if child is not None:
+            child.parent = parent
+        if parent is None:
+            self.root = child
+        elif parent.left is z:
+            parent.left = child
+        else:
+            parent.right = child
+        if z.color == BLACK:  # @step check_black
+            self._fix_delete(child, parent)  # @step call_fix
+        return True  # @step done
+
+    def _fix_delete(self, x, parent):
+        while x is not self.root and color(x) == BLACK:  # @step fd_loop
+            is_left = x is parent.left
+            s = parent.right if is_left else parent.left  # @step fd_sibling
+            if s.color == RED:  # @step fd_case1
+                s.color, parent.color = BLACK, RED
+                self._rotate(s)  # @step fd_rotate1
+                s = parent.right if is_left else parent.left
+            near = s.left if is_left else s.right
+            far = s.right if is_left else s.left  # @step fd_nephews
+            if color(near) == BLACK and color(far) == BLACK:  # @step fd_case2
+                s.color = RED  # @step fd_recolor2
+                x, parent = parent, parent.parent
+            else:
+                if color(far) == BLACK:  # @step fd_case3
+                    near.color, s.color = BLACK, RED
+                    self._rotate(near)  # @step fd_rotate3
+                    s, far = near, s
+                s.color, parent.color = parent.color, BLACK  # @step fd_case4
+                far.color = BLACK
+                self._rotate(s)  # @step fd_rotate4
+                x = self.root
+        if x is not None:  # @step fd_end
+            x.color = BLACK
     # @endop
 
     def inorder(self):

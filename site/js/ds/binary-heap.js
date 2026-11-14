@@ -28,13 +28,14 @@
         ['Insert', 'O(log n)', 'O(log n)'],
         ['Extract min', 'O(log n)', 'O(log n)'],
         ['Peek min', 'O(1)', 'O(1)'],
+        ['Build heap (bottom-up)', 'O(n)', 'O(n)'],
       ],
       space: 'O(n), no pointers needed',
-      notes: 'The tree and the array below it are the same data. Watch both move on every swap.',
+      notes: 'The tree and the array below it are the same data. Watch both move on every swap. build_heap is O(n), not O(n log n): most nodes are near the bottom and sift only a short way.',
     },
 
     create(values) {
-      return { model: { items: build(values) }, msg: `Inserted ${values.length} values one by one; the smallest is at the root.` };
+      return { model: { items: build(values), raw: values.slice() }, msg: `Inserted ${values.length} values one by one; the smallest is at the root.` };
     },
     snapshot: (m) => DSV.heapSnapshot(m.items),
 
@@ -45,6 +46,8 @@
       ['1 5 3 9 7', 'extract_min', []],
       ['1', 'extract_min', []],
       ['', 'extract_min', []],
+      ['9 8 7 6 5 4 3 2 1', 'build_heap', []],
+      ['', 'build_heap', []],
     ],
 
     ops: [
@@ -81,9 +84,25 @@
             items[0] = lastNode;
             t.step('move_last', `Put ${last} at the root, replacing ${top}.`, { top, last }, { hl: { [lastNode.id]: 'active' } });
             t.step('sift', `Sift ${last} down until both children are larger.`, { top, last }, { hl: { [lastNode.id]: 'active' } });
-            DSV.heapSiftDown(t, items, 0, less, 'smallest');
+            DSV.heapSiftDown(t, items, 0, less, 'smallest', 'sift_down');
           }
           t.step('done', `Return ${top}.`, { top }, { ok: true });
+        },
+      },
+      {
+        id: 'build_heap',
+        label: 'build_heap() from initial values',
+        args: [],
+        run(t, m) {
+          const items = (m.items = m.raw.map((value) => DSV.node({ value })));
+          const n = items.length;
+          t.step('copy', `Copy the initial values in their original order [${m.raw.join(', ')}]. This is not a heap yet.`, { values: m.raw.slice() });
+          for (let i = (n >> 1) - 1; ; i--) {
+            t.step('loop', i >= 0 ? `Sift down index ${i}. Leaves (indexes ${n >> 1}..${n - 1}) are already tiny heaps.` : 'Every internal node has been sifted: it is a heap.', { i }, { hl: i >= 0 ? { [items[i].id]: 'active' } : {}, ok: i < 0 ? true : undefined });
+            if (i < 0) break;
+            t.step('sift', `Sift ${items[i].value} down into its subtree.`, { i }, { hl: { [items[i].id]: 'active' } });
+            DSV.heapSiftDown(t, items, i, less, 'smallest', 'sift_down');
+          }
         },
       },
     ],

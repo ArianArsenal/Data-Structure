@@ -41,7 +41,18 @@ public:
         }
         return top;                     // @step done
     }
+    // @endop
 
+    // @op build_heap
+    void buildHeap(const std::vector<int>& values) {
+        data = values;                                      // @step copy
+        for (int i = (int)data.size() / 2 - 1; i >= 0; i--) {  // @step loop
+            siftDown(i);                                    // @step sift
+        }
+    }
+    // @endop
+
+    // @op sift_down
     void siftDown(int i) {
         int n = (int)data.size();
         while (true) {

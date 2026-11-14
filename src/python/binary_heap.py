@@ -32,7 +32,16 @@ class BinaryHeap:
             self.data[0] = last  # @step move_last
             self._sift_down(0)  # @step sift
         return top  # @step done
+    # @endop
 
+    # @op build_heap
+    def build_heap(self, values):
+        self.data = list(values)  # @step copy
+        for i in range(len(self.data) // 2 - 1, -1, -1):  # @step loop
+            self._sift_down(i)  # @step sift
+    # @endop
+
+    # @op sift_down
     def _sift_down(self, i):
         n = len(self.data)
         while True:

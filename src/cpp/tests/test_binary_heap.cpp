@@ -1,5 +1,6 @@
 #include "../binary_heap.h"
 
+#include <algorithm>
 #include <functional>
 #include <queue>
 #include <random>
@@ -22,6 +23,19 @@ int main() {
             int v = rng() % 51;
             h.insert(v);
             ref.push(v);
+        }
+    }
+    {
+        std::mt19937 r(42);
+        for (int trial = 0; trial < 50; trial++) {
+            std::vector<int> vals(r() % 30);
+            for (int& v : vals) v = r() % 100;
+            BinaryHeap b;
+            b.buildHeap(vals);
+            std::sort(vals.begin(), vals.end());
+            std::vector<int> out;
+            while (b.size()) out.push_back(b.extractMin());
+            CHECK(out == vals);
         }
     }
     return finish("binary_heap");

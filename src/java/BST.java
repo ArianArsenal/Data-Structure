@@ -97,6 +97,48 @@ public class BST {
     }
     // @endop
 
+    // @op minimum
+    public Integer minimum() {
+        if (root == null) {             // @step check_empty
+            return null;                // @step empty
+        }
+        Node curr = root;               // @step start
+        while (curr.left != null) {     // @step loop
+            curr = curr.left;           // @step go_left
+        }
+        return curr.key;                // @step done
+    }
+    // @endop
+
+    // @op maximum
+    public Integer maximum() {
+        if (root == null) {             // @step check_empty
+            return null;                // @step empty
+        }
+        Node curr = root;               // @step start
+        while (curr.right != null) {    // @step loop
+            curr = curr.right;          // @step go_right
+        }
+        return curr.key;                // @step done
+    }
+    // @endop
+
+    // @op successor
+    public Integer successor(int key) {
+        Node succ = null;               // @step start
+        Node curr = root;
+        while (curr != null) {          // @step loop
+            if (key < curr.key) {       // @step compare
+                succ = curr;            // @step remember
+                curr = curr.left;       // @step go_left
+            } else {
+                curr = curr.right;      // @step go_right
+            }
+        }
+        return succ == null ? null : succ.key;  // @step done
+    }
+    // @endop
+
     // @op inorder
     public List<Integer> inorder() {
         List<Integer> result = new ArrayList<>(); // @step init

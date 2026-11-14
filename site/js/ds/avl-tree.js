@@ -31,7 +31,9 @@
     return n;
   }
 
-  function rotateRight(t, y, base) {
+  function rotateRight(t0, y, base) {
+    // Frames belong to the insert region, where the rotations are written.
+    const t = { step: (id, msg, v, o) => t0.step(id, msg, v, Object.assign({ op: 'insert' }, o)) };
     const x = y.left;
     const v = () => Object.assign({}, base, { y, x });
     t.step('rotr_pick', `Rotate right around ${y.key}: its left child ${x.key} will rise.`, v(), { hl: hl(y, 'active', x, 'new') });
@@ -46,7 +48,9 @@
     return x;
   }
 
-  function rotateLeft(t, x, base) {
+  function rotateLeft(t0, x, base) {
+    // Frames belong to the insert region, where the rotations are written.
+    const t = { step: (id, msg, v, o) => t0.step(id, msg, v, Object.assign({ op: 'insert' }, o)) };
     const y = x.right;
     const v = () => Object.assign({}, base, { x, y });
     t.step('rotl_pick', `Rotate left around ${x.key}: its right child ${y.key} will rise.`, v(), { hl: hl(x, 'active', y, 'new') });
@@ -66,12 +70,13 @@
     title: 'AVL Tree',
     layout: 'binaryTree',
     about:
-      'A self-balancing BST. After every insert, each node on the way back up recomputes its height and balance factor (left height − right height). When the balance reaches ±2, one or two rotations restore it, so the height stays O(log n) no matter the insertion order.',
+      'A self-balancing BST. After every insert or delete, each node on the way back up recomputes its height and balance factor (left height − right height). When the balance reaches ±2, one or two rotations restore it, so the height stays O(log n) no matter the insertion order.',
     init: { default: '30, 20, 40, 10, 25', max: MAX, random: [8, 1, 99] },
     complexity: {
       rows: [
         ['Insert', 'O(log n)', 'O(log n)'],
         ['Search', 'O(log n)', 'O(log n)'],
+        ['Delete', 'O(log n)', 'O(log n)'],
         ['Rotation', 'O(1)', 'O(1)'],
       ],
       space: 'O(n)',
@@ -104,6 +109,12 @@
       ['20 10 30 25 40', 'insert', [22]],
       ['20 10 30', 'insert', [20]],
       ['20 10 30', 'insert', [5]],
+      ['30 20 40 10 25 50', 'delete', [40]],
+      ['30 20 40 10 25 50', 'delete', [10]],
+      ['30 20 40 10 25 35 50 5', 'delete', [30]],
+      ['20 10 30 25', 'delete', [10]],
+      ['20 10 30 15', 'delete', [30]],
+      ['20 10 30', 'delete', [99]],
     ],
 
     ops: [
@@ -180,6 +191,103 @@
           };
           m.root = ins(m.root, 1);
           t.step('call_root', `root = returned subtree (${m.root.key}). Done.`, { key }, { ok: true });
+        },
+      },
+      {
+        id: 'delete',
+        label: 'delete(key)',
+        args: [{ name: 'key', default: 40 }],
+        run(t, m, key) {
+          let removed = false;
+          t.step('call_root', 'Delete recursively; every node on the way back up is rebalanced.', { key });
+          const rebalance = (node, base) => {
+            const v = (x) => Object.assign({}, base, { node }, x);
+            update(node);
+            t.step('rb_height', `height(${node.key}) = ${node.height}.`, v(), { hl: hl(node, 'active') });
+            const balance = h(node.left) - h(node.right);
+            const bad = Math.abs(balance) > 1;
+            t.step('rb_balance', `balance = ${h(node.left)} − ${h(node.right)} = ${balance}. ${bad ? 'Unbalanced!' : 'OK.'}`, v({ balance }), { hl: hl(node, bad ? 'removed' : 'active') });
+            t.step('rb_left_heavy', balance > 1 ? 'Left-heavy.' : 'Not left-heavy.', v({ balance }), { hl: hl(node, bad ? 'removed' : 'active') });
+            if (balance > 1) {
+              const lr = h(node.left.left) < h(node.left.right);
+              t.step('rb_check_lr', lr ? `The left child leans right (left-right case): rotate it first.` : 'The left child does not lean right (left-left case).', v({ balance }), { hl: hl(node, 'removed', node.left, 'active') });
+              if (lr) {
+                t.step('rb_fix_lr', `Rotate ${node.left.key} left.`, v({ balance }), { hl: hl(node, 'removed') });
+                node.left = rotateLeft(t, node.left, base);
+              }
+              t.step('rb_rotate_right', `Rotate ${node.key} right.`, v({ balance }), { hl: hl(node, 'removed') });
+              return rotateRight(t, node, base);
+            }
+            t.step('rb_right_heavy', balance < -1 ? 'Right-heavy.' : 'Not right-heavy.', v({ balance }), { hl: hl(node, bad ? 'removed' : 'active') });
+            if (balance < -1) {
+              const rl = h(node.right.right) < h(node.right.left);
+              t.step('rb_check_rl', rl ? `The right child leans left (right-left case): rotate it first.` : 'The right child does not lean left (right-right case).', v({ balance }), { hl: hl(node, 'removed', node.right, 'active') });
+              if (rl) {
+                t.step('rb_fix_rl', `Rotate ${node.right.key} right.`, v({ balance }), { hl: hl(node, 'removed') });
+                node.right = rotateRight(t, node.right, base);
+              }
+              t.step('rb_rotate_left', `Rotate ${node.key} left.`, v({ balance }), { hl: hl(node, 'removed') });
+              return rotateLeft(t, node, base);
+            }
+            t.step('rb_done', `${node.key} is balanced: return it.`, v({ balance }), { hl: hl(node, 'active') });
+            return node;
+          };
+          const del = (node, key, depth) => {
+            const v = (x) => Object.assign({ key, node, depth }, x);
+            t.step('check_null', node ? `depth ${depth}: at ${node.key}.` : `depth ${depth}: empty subtree.`, v(), { hl: hl(node, 'active') });
+            if (!node) {
+              t.step('not_found', `${key} is not in the tree.`, v(), { ok: false });
+              return null;
+            }
+            const less = key < node.key;
+            t.step('cmp_less', `Is ${key} < ${node.key}? ${less ? 'Yes.' : 'No.'}`, v(), { hl: hl(node, 'active') });
+            if (less) {
+              t.step('recurse_left', `Recurse into the left subtree of ${node.key}.`, v(), { hl: hl(node, 'active') });
+              t.mark(node.id, 'visited');
+              node.left = del(node.left, key, depth + 1);
+              t.mark(node.id);
+              t.step('recurse_left', `Back at ${node.key}: link the returned subtree.`, v(), { hl: hl(node, 'active') });
+            } else {
+              const greater = key > node.key;
+              t.step('cmp_greater', `Is ${key} > ${node.key}? ${greater ? 'Yes.' : 'No: this is the node to delete.'}`, v(), { hl: hl(node, greater ? 'active' : 'removed') });
+              if (greater) {
+                t.step('recurse_right', `Recurse into the right subtree of ${node.key}.`, v(), { hl: hl(node, 'active') });
+                t.mark(node.id, 'visited');
+                node.right = del(node.right, key, depth + 1);
+                t.mark(node.id);
+                t.step('recurse_right', `Back at ${node.key}: link the returned subtree.`, v(), { hl: hl(node, 'active') });
+              } else {
+                const one = !node.left || !node.right;
+                t.step('check_children', one ? `${node.key} has at most one child.` : `${node.key} has two children.`, v(), { hl: hl(node, 'removed') });
+                if (one) {
+                  removed = true;
+                  const child = node.left || node.right;
+                  t.step('return_child', `Replace ${node.key} with ${child ? child.key : 'nothing'}.`, v(), { hl: hl(node, 'removed', child, 'found') });
+                  return child;
+                }
+                let succ = node.right;
+                t.step('succ_start', 'Find the in-order successor: the leftmost node of the right subtree.', v({ succ }), { hl: hl(node, 'removed', succ, 'active') });
+                for (;;) {
+                  t.step('succ_loop', succ.left ? `${succ.key} has a left child: keep going.` : `${succ.key} is the successor.`, v({ succ }), { hl: hl(node, 'removed', succ, 'active') });
+                  if (!succ.left) break;
+                  succ = succ.left;
+                }
+                const old = node.key;
+                node.key = succ.key;
+                t.step('copy_key', `Copy ${succ.key} over ${old}; now delete ${succ.key} from the right subtree.`, v({ succ }), { hl: hl(node, 'found', succ, 'removed') });
+                const sk = succ.key;
+                t.step('recurse_succ', `Recurse right to delete ${sk}.`, v(), { hl: hl(node, 'found') });
+                t.mark(node.id, 'visited');
+                node.right = del(node.right, sk, depth + 1);
+                t.mark(node.id);
+                t.step('recurse_succ', `Back at ${node.key}.`, v(), { hl: hl(node, 'found') });
+              }
+            }
+            t.step('rebalance', `Rebalance ${node.key} before returning it.`, v(), { hl: hl(node, 'active') });
+            return rebalance(node, { key, depth });
+          };
+          m.root = del(m.root, key, 1);
+          t.step('call_root', removed ? `root = ${m.root ? m.root.key : '%null%'}. ${key} is deleted and the tree is balanced.` : `${key} was not found.`, { key }, { ok: removed });
         },
       },
     ],

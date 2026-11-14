@@ -21,5 +21,13 @@ int main() {
         else { auto got = r.get(k); CHECK(got.has_value() == (ref.count(k) == 1) && (!got || *got == ref[k])); }
         CHECK(r.getSize() == (int)ref.size());
     }
+    {
+        HashTableChaining g;
+        for (int k = 0; k < 7; k++) g.put(k, k);
+        CHECK(g.capacity() == 7);
+        g.put(7, 7);
+        CHECK(g.capacity() == 14);
+        for (int k = 0; k < 8; k++) CHECK(g.get(k) == k);
+    }
     return finish("hash_table_chaining");
 }

@@ -35,5 +35,20 @@ class TestHashTableChaining(unittest.TestCase):
                 self.assertEqual(h.get(k), ref.get(k))
             self.assertEqual(h.size, len(ref))
 
+    def test_resize(self):
+        h = HashTableChaining()
+        for k in range(7):
+            h.put(k, k)
+        self.assertEqual(len(h.buckets), 7)
+        h.put(7, 7)  # size 8 > 7 buckets: double
+        self.assertEqual(len(h.buckets), 14)
+        for k in range(8):
+            self.assertEqual(h.get(k), k)
+            i = k % 14
+            node = h.buckets[i]
+            while node.key != k:
+                node = node.next
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -84,6 +84,52 @@ public class AVLTree {
     }
     // @endop
 
+    // @op delete
+    public void delete(int key) {
+        root = delete(root, key);       // @step call_root
+    }
+
+    private Node delete(Node node, int key) {
+        if (node == null) {             // @step check_null
+            return null;                // @step not_found
+        }
+        if (key < node.key) {                           // @step cmp_less
+            node.left = delete(node.left, key);         // @step recurse_left
+        } else if (key > node.key) {                    // @step cmp_greater
+            node.right = delete(node.right, key);       // @step recurse_right
+        } else {
+            if (node.left == null || node.right == null) {  // @step check_children
+                return node.left != null ? node.left : node.right;  // @step return_child
+            }
+            Node succ = node.right;                     // @step succ_start
+            while (succ.left != null) {                 // @step succ_loop
+                succ = succ.left;
+            }
+            node.key = succ.key;                        // @step copy_key
+            node.right = delete(node.right, succ.key);  // @step recurse_succ
+        }
+        return rebalance(node);                         // @step rebalance
+    }
+
+    private Node rebalance(Node node) {
+        update(node);                                           // @step rb_height
+        int balance = height(node.left) - height(node.right);   // @step rb_balance
+        if (balance > 1) {                                      // @step rb_left_heavy
+            if (height(node.left.left) < height(node.left.right)) {     // @step rb_check_lr
+                node.left = rotateLeft(node.left);              // @step rb_fix_lr
+            }
+            return rotateRight(node);                           // @step rb_rotate_right
+        }
+        if (balance < -1) {                                     // @step rb_right_heavy
+            if (height(node.right.right) < height(node.right.left)) {   // @step rb_check_rl
+                node.right = rotateRight(node.right);           // @step rb_fix_rl
+            }
+            return rotateLeft(node);                            // @step rb_rotate_left
+        }
+        return node;                                            // @step rb_done
+    }
+    // @endop
+
     public List<Integer> inorder() {
         List<Integer> out = new ArrayList<>();
         walk(root, out);

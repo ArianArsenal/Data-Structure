@@ -1,5 +1,7 @@
 // B-tree with minimum degree T = 2 (a 2-3-4 tree): every node holds 1 to 3
 // keys. Insert splits full nodes on the way down, so the tree only grows at the root.
+// Delete makes sure every node it enters has at least T keys (by borrowing from a
+// sibling or merging), so it never has to walk back up.
 // `// @step` / `// @op` markers drive the visualizer; see tools/build_code.js.
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +89,85 @@ public class BTree {
         }
         parent.keys.add(i, mid);                    // @step sp_lift
         parent.children.add(i + 1, right);          // @step sp_link
+    }
+    // @endop
+
+    // @op delete
+    public boolean delete(int key) {
+        boolean removed = delete(root, key);            // @step call_root
+        if (root.keys.isEmpty() && !root.leaf) {        // @step check_root
+            root = root.children.get(0);                // @step shrink_root
+        }
+        return removed;
+    }
+
+    private boolean delete(BNode node, int key) {
+        int i = 0;                                                      // @step scan_start
+        while (i < node.keys.size() && key > node.keys.get(i)) {        // @step scan
+            i++;
+        }
+        if (i < node.keys.size() && node.keys.get(i) == key) {          // @step check_here
+            if (node.leaf) {                                            // @step check_leaf
+                node.keys.remove(i);                                    // @step remove_leaf
+                return true;
+            }
+            if (node.children.get(i).keys.size() >= T) {                // @step case_pred
+                BNode pred = node.children.get(i);                      // @step find_pred
+                while (!pred.leaf) pred = pred.children.get(pred.children.size() - 1);
+                node.keys.set(i, pred.keys.get(pred.keys.size() - 1)); // @step use_pred
+                return delete(node.children.get(i), node.keys.get(i));  // @step recurse_pred
+            }
+            if (node.children.get(i + 1).keys.size() >= T) {            // @step case_succ
+                BNode succ = node.children.get(i + 1);                  // @step find_succ
+                while (!succ.leaf) succ = succ.children.get(0);
+                node.keys.set(i, succ.keys.get(0));                     // @step use_succ
+                return delete(node.children.get(i + 1), node.keys.get(i)); // @step recurse_succ
+            }
+            merge(node, i);                                             // @step merge_here
+            return delete(node.children.get(i), key);                   // @step recurse_merged
+        }
+        if (node.leaf) {                                                // @step check_missing
+            return false;                                               // @step not_found
+        }
+        if (node.children.get(i).keys.size() == T - 1) {                // @step check_thin
+            i = fill(node, i);                                          // @step fill
+        }
+        return delete(node.children.get(i), key);                       // @step descend
+    }
+
+    // Give child i at least T keys; return the index of the child to enter.
+    private int fill(BNode node, int i) {
+        BNode child = node.children.get(i);
+        if (i > 0 && node.children.get(i - 1).keys.size() >= T) {       // @step borrow_left_check
+            BNode left = node.children.get(i - 1);
+            child.keys.add(0, node.keys.get(i - 1));                    // @step borrow_left
+            node.keys.set(i - 1, left.keys.remove(left.keys.size() - 1));
+            if (!left.leaf) child.children.add(0, left.children.remove(left.children.size() - 1));
+            return i;
+        }
+        if (i < node.keys.size() && node.children.get(i + 1).keys.size() >= T) {  // @step borrow_right_check
+            BNode right = node.children.get(i + 1);
+            child.keys.add(node.keys.get(i));                           // @step borrow_right
+            node.keys.set(i, right.keys.remove(0));
+            if (!right.leaf) child.children.add(right.children.remove(0));
+            return i;
+        }
+        if (i < node.keys.size()) {                                     // @step merge_check
+            merge(node, i);                                             // @step merge_right
+            return i;
+        }
+        merge(node, i - 1);                                             // @step merge_left
+        return i - 1;
+    }
+
+    // Merge child i, key i and child i + 1 into child i.
+    private void merge(BNode node, int i) {
+        BNode left = node.children.get(i);                              // @step mg_pick
+        BNode right = node.children.get(i + 1);
+        left.keys.add(node.keys.remove(i));                             // @step mg_pull
+        left.keys.addAll(right.keys);                                   // @step mg_join
+        left.children.addAll(right.children);
+        node.children.remove(i + 1);                                    // @step mg_unlink
     }
     // @endop
 

@@ -40,5 +40,11 @@ int main() {
             CHECK(t.inorder() == V(ref.begin(), ref.end()));
         }
     }
+    {
+        BST t({50, 30, 70, 20, 40, 60, 80});
+        CHECK(t.minimum() == 20 && t.maximum() == 80);
+        CHECK(t.successor(40) == 50 && t.successor(45) == 50 && !t.successor(80) && t.successor(5) == 20);
+        CHECK(!BST().minimum());
+    }
     return finish("bst");
 }

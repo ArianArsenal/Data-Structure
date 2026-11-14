@@ -77,6 +77,54 @@ public:
     }
     // @endop
 
+    // @op delete
+    void remove(int key) {
+        root = remove(root, key);       // @step call_root
+    }
+
+    Node* remove(Node* node, int key) {
+        if (node == nullptr) {          // @step check_null
+            return nullptr;             // @step not_found
+        }
+        if (key < node->key) {                          // @step cmp_less
+            node->left = remove(node->left, key);       // @step recurse_left
+        } else if (key > node->key) {                   // @step cmp_greater
+            node->right = remove(node->right, key);     // @step recurse_right
+        } else {
+            if (node->left == nullptr || node->right == nullptr) {  // @step check_children
+                Node* child = node->left != nullptr ? node->left : node->right;
+                delete node;
+                return child;                           // @step return_child
+            }
+            Node* succ = node->right;                   // @step succ_start
+            while (succ->left != nullptr) {             // @step succ_loop
+                succ = succ->left;
+            }
+            node->key = succ->key;                      // @step copy_key
+            node->right = remove(node->right, succ->key); // @step recurse_succ
+        }
+        return rebalance(node);                         // @step rebalance
+    }
+
+    Node* rebalance(Node* node) {
+        update(node);                                           // @step rb_height
+        int balance = height(node->left) - height(node->right); // @step rb_balance
+        if (balance > 1) {                                      // @step rb_left_heavy
+            if (height(node->left->left) < height(node->left->right)) {  // @step rb_check_lr
+                node->left = rotateLeft(node->left);            // @step rb_fix_lr
+            }
+            return rotateRight(node);                           // @step rb_rotate_right
+        }
+        if (balance < -1) {                                     // @step rb_right_heavy
+            if (height(node->right->right) < height(node->right->left)) {  // @step rb_check_rl
+                node->right = rotateRight(node->right);         // @step rb_fix_rl
+            }
+            return rotateLeft(node);                            // @step rb_rotate_left
+        }
+        return node;                                            // @step rb_done
+    }
+    // @endop
+
     std::vector<int> inorder() const {
         std::vector<int> out;
         walk(root, out);

@@ -21,7 +21,7 @@
         return o + v.items.map((x) => show(x, lang)).join(', ') + c;
       }
       default:
-        return `<span class="tk-nu">${esc(v.v)}</span>`;
+        return `<span class="tk-nu">${v.v === Infinity ? '∞' : esc(v.v)}</span>`;
     }
   }
 

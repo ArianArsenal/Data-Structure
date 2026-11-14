@@ -71,6 +71,41 @@ class AVLTree:
         return y  # @step rotl_return
     # @endop
 
+    # @op delete
+    def delete(self, key):
+        self.root = self._delete(self.root, key)  # @step call_root
+
+    def _delete(self, node, key):
+        if node is None:  # @step check_null
+            return None  # @step not_found
+        if key < node.key:  # @step cmp_less
+            node.left = self._delete(node.left, key)  # @step recurse_left
+        elif key > node.key:  # @step cmp_greater
+            node.right = self._delete(node.right, key)  # @step recurse_right
+        else:
+            if node.left is None or node.right is None:  # @step check_children
+                return node.left if node.left is not None else node.right  # @step return_child
+            succ = node.right  # @step succ_start
+            while succ.left is not None:  # @step succ_loop
+                succ = succ.left
+            node.key = succ.key  # @step copy_key
+            node.right = self._delete(node.right, succ.key)  # @step recurse_succ
+        return self._rebalance(node)  # @step rebalance
+
+    def _rebalance(self, node):
+        update(node)  # @step rb_height
+        balance = height(node.left) - height(node.right)  # @step rb_balance
+        if balance > 1:  # @step rb_left_heavy
+            if height(node.left.left) < height(node.left.right):  # @step rb_check_lr
+                node.left = self._rotate_left(node.left)  # @step rb_fix_lr
+            return self._rotate_right(node)  # @step rb_rotate_right
+        if balance < -1:  # @step rb_right_heavy
+            if height(node.right.right) < height(node.right.left):  # @step rb_check_rl
+                node.right = self._rotate_right(node.right)  # @step rb_fix_rl
+            return self._rotate_left(node)  # @step rb_rotate_left
+        return node  # @step rb_done
+    # @endop
+
     def inorder(self):
         out = []
 

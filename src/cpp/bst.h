@@ -3,6 +3,7 @@
 // Lines tagged `// @step <id>` and the `// @op` / `// @endop` markers drive the
 // visualizer (tools/build_code.js strips them); the code itself is plain C++17.
 #pragma once
+#include <optional>
 #include <vector>
 
 class BST {
@@ -115,6 +116,49 @@ public:
         inorderVisit(node->left, result);   // @step go_left
         result.push_back(node->key);        // @step visit
         inorderVisit(node->right, result);  // @step go_right
+    }
+    // @endop
+
+    // @op minimum
+    std::optional<int> minimum() const {
+        if (root == nullptr) {          // @step check_empty
+            return std::nullopt;        // @step empty
+        }
+        Node* curr = root;              // @step start
+        while (curr->left != nullptr) { // @step loop
+            curr = curr->left;          // @step go_left
+        }
+        return curr->key;               // @step done
+    }
+    // @endop
+
+    // @op maximum
+    std::optional<int> maximum() const {
+        if (root == nullptr) {          // @step check_empty
+            return std::nullopt;        // @step empty
+        }
+        Node* curr = root;              // @step start
+        while (curr->right != nullptr) { // @step loop
+            curr = curr->right;         // @step go_right
+        }
+        return curr->key;               // @step done
+    }
+    // @endop
+
+    // @op successor
+    std::optional<int> successor(int key) const {
+        Node* succ = nullptr;           // @step start
+        Node* curr = root;
+        while (curr != nullptr) {       // @step loop
+            if (key < curr->key) {      // @step compare
+                succ = curr;            // @step remember
+                curr = curr->left;      // @step go_left
+            } else {
+                curr = curr->right;     // @step go_right
+            }
+        }
+        if (succ == nullptr) return std::nullopt;  // @step done
+        return succ->key;
     }
     // @endop
 

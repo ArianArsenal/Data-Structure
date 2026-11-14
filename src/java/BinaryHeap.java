@@ -39,7 +39,19 @@ public class BinaryHeap {
         }
         return top;                                 // @step done
     }
+    // @endop
 
+    // @op build_heap
+    public void buildHeap(int... values) {
+        data.clear();                                       // @step copy
+        for (int v : values) data.add(v);
+        for (int i = data.size() / 2 - 1; i >= 0; i--) {    // @step loop
+            siftDown(i);                                    // @step sift
+        }
+    }
+    // @endop
+
+    // @op sift_down
     private void siftDown(int i) {
         int n = data.size();
         while (true) {

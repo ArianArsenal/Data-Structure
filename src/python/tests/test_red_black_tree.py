@@ -39,5 +39,22 @@ class TestRedBlackTree(unittest.TestCase):
         self.assertEqual(t.inorder(), sorted(set(keys)))
         check(t.root)
 
+    def test_delete(self):
+        rng = random.Random(44)
+        t, ref = RedBlackTree(), set()
+        for _ in range(1500):
+            k = rng.randint(0, 120)
+            if rng.random() < 0.55:
+                self.assertEqual(t.insert(k), k not in ref)
+                ref.add(k)
+            else:
+                self.assertEqual(t.delete(k), k in ref)
+                ref.discard(k)
+            if t.root is not None:
+                self.assertEqual(t.root.color, BLACK)
+            check(t.root)
+        self.assertEqual(t.inorder(), sorted(ref))
+
+
 if __name__ == "__main__":
     unittest.main()

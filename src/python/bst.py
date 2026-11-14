@@ -90,5 +90,37 @@ class BST:
         self._inorder(node.right, result)  # @step go_right
     # @endop
 
+    # @op minimum
+    def minimum(self):
+        if self.root is None:  # @step check_empty
+            return None  # @step empty
+        curr = self.root  # @step start
+        while curr.left is not None:  # @step loop
+            curr = curr.left  # @step go_left
+        return curr.key  # @step done
+    # @endop
+
+    # @op maximum
+    def maximum(self):
+        if self.root is None:  # @step check_empty
+            return None  # @step empty
+        curr = self.root  # @step start
+        while curr.right is not None:  # @step loop
+            curr = curr.right  # @step go_right
+        return curr.key  # @step done
+    # @endop
+
+    # @op successor
+    def successor(self, key):
+        succ, curr = None, self.root  # @step start
+        while curr is not None:  # @step loop
+            if key < curr.key:  # @step compare
+                succ = curr  # @step remember
+                curr = curr.left  # @step go_left
+            else:
+                curr = curr.right  # @step go_right
+        return succ.key if succ is not None else None  # @step done
+    # @endop
+
     def __contains__(self, key):
         return self.search(key)

@@ -26,6 +26,18 @@ public class TestRedBlackTree {
         Check.check(t.inorder().equals(new ArrayList<>(ref)), "order");
         Check.check(t.root.color == RedBlackTree.BLACK, "black root");
         blackHeight(t.root, null);
+        Random r2 = new Random(44);
+        RedBlackTree d = new RedBlackTree();
+        TreeSet<Integer> s = new TreeSet<>();
+        for (int i = 0; i < 1500; i++) {
+            int k = r2.nextInt(121);
+            if (r2.nextInt(100) < 55) Check.check(d.insert(k) == s.add(k), "insert");
+            else Check.check(d.delete(k) == s.remove(k), "delete");
+            if (d.root != null) Check.check(d.root.color == RedBlackTree.BLACK, "black root");
+            blackHeight(d.root, null);
+        }
+        Check.check(d.inorder().equals(new ArrayList<>(s)), "order after deletes");
+
         Check.finish("RedBlackTree");
     }
 }

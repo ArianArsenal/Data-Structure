@@ -1,4 +1,4 @@
-// Red-black tree (insert). Invariants: the root is black, a red node has no red
+// Red-black tree (insert and delete). Invariants: the root is black, a red node has no red
 // child, and every root-to-leaf path has the same number of black nodes.
 // `// @step` / `// @op` markers drive the visualizer; see tools/build_code.js.
 import java.util.ArrayList;
@@ -98,6 +98,78 @@ public class RedBlackTree {
         }
     }
     // @endop
+
+    // @op delete
+    public boolean delete(int key) {
+        Node z = root;                                  // @step start
+        while (z != null && z.key != key) {             // @step search
+            z = key < z.key ? z.left : z.right;
+        }
+        if (z == null) {                                // @step check_found
+            return false;                               // @step not_found
+        }
+        if (z.left != null && z.right != null) {        // @step check_two
+            Node s = z.right;                           // @step find_succ
+            while (s.left != null) s = s.left;
+            z.key = s.key;                              // @step copy_key
+            z = s;
+        }
+        Node child = z.left != null ? z.left : z.right; // @step splice
+        Node parent = z.parent;
+        if (child != null) child.parent = parent;
+        if (parent == null) {
+            root = child;
+        } else if (parent.left == z) {
+            parent.left = child;
+        } else {
+            parent.right = child;
+        }
+        if (z.color == BLACK) {                         // @step check_black
+            fixDelete(child, parent);                   // @step call_fix
+        }
+        return true;                                    // @step done
+    }
+
+    private void fixDelete(Node x, Node parent) {
+        while (x != root && color(x) == BLACK) {                    // @step fd_loop
+            boolean isLeft = x == parent.left;
+            Node s = isLeft ? parent.right : parent.left;           // @step fd_sibling
+            if (s.color == RED) {                                   // @step fd_case1
+                s.color = BLACK;
+                parent.color = RED;
+                rotate(s);                                          // @step fd_rotate1
+                s = isLeft ? parent.right : parent.left;
+            }
+            Node near = isLeft ? s.left : s.right;
+            Node far = isLeft ? s.right : s.left;                   // @step fd_nephews
+            if (color(near) == BLACK && color(far) == BLACK) {      // @step fd_case2
+                s.color = RED;                                      // @step fd_recolor2
+                x = parent;
+                parent = parent.parent;
+            } else {
+                if (color(far) == BLACK) {                          // @step fd_case3
+                    near.color = BLACK;
+                    s.color = RED;
+                    rotate(near);                                   // @step fd_rotate3
+                    far = s;
+                    s = near;
+                }
+                s.color = parent.color;                             // @step fd_case4
+                parent.color = BLACK;
+                far.color = BLACK;
+                rotate(s);                                          // @step fd_rotate4
+                x = root;
+            }
+        }
+        if (x != null) {                                            // @step fd_end
+            x.color = BLACK;
+        }
+    }
+    // @endop
+
+    private static boolean color(Node n) {
+        return n == null ? BLACK : n.color; // empty leaves count as black
+    }
 
     public List<Integer> inorder() {
         List<Integer> out = new ArrayList<>();

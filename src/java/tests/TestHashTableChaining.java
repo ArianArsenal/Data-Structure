@@ -20,6 +20,13 @@ public class TestHashTableChaining {
             else Check.check(Objects.equals(r.get(k), ref.get(k)), "random get");
             Check.check(r.size() == ref.size(), "size");
         }
+        HashTableChaining g = new HashTableChaining();
+        for (int k = 0; k < 7; k++) g.put(k, k);
+        Check.check(g.capacity() == 7, "capacity before");
+        g.put(7, 7);
+        Check.check(g.capacity() == 14, "capacity after resize");
+        for (int k = 0; k < 8; k++) Check.check(g.get(k) == k, "get after resize");
+
         Check.finish("HashTableChaining");
     }
 }

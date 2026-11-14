@@ -17,6 +17,17 @@ public class TestBinaryHeap {
                 ref.add(v);
             }
         }
+        Random r = new Random(42);
+        for (int trial = 0; trial < 50; trial++) {
+            int[] vals = new int[r.nextInt(30)];
+            for (int i = 0; i < vals.length; i++) vals[i] = r.nextInt(100);
+            BinaryHeap b = new BinaryHeap();
+            b.buildHeap(vals);
+            int[] sorted = vals.clone();
+            java.util.Arrays.sort(sorted);
+            for (int v : sorted) Check.check(b.extractMin() == v, "build_heap order");
+        }
+
         Check.finish("BinaryHeap");
     }
 }

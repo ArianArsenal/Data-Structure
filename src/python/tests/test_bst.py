@@ -44,6 +44,21 @@ class TestBST(unittest.TestCase):
                 ref.discard(k)
             self.assertEqual(t.inorder(), sorted(ref))
 
+    def test_min_max_successor(self):
+        t = BST([50, 30, 70, 20, 40, 60, 80])
+        self.assertEqual((t.minimum(), t.maximum()), (20, 80))
+        self.assertEqual(t.successor(40), 50)
+        self.assertEqual(t.successor(45), 50)
+        self.assertEqual(t.successor(80), None)
+        self.assertEqual(t.successor(5), 20)
+        self.assertIsNone(BST().minimum())
+        rng = random.Random(41)
+        keys = sorted({rng.randint(0, 200) for _ in range(60)})
+        t = BST(rng.sample(keys, len(keys)))
+        for q in range(-5, 210, 7):
+            nxt = [k for k in keys if k > q]
+            self.assertEqual(t.successor(q), nxt[0] if nxt else None)
+
 
 if __name__ == "__main__":
     unittest.main()

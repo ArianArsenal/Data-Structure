@@ -31,5 +31,18 @@ int main() {
     CHECK(t.inorder() == std::vector<int>(ref.begin(), ref.end()));
     CHECK(t.getRoot()->color == RedBlackTree::BLACK);
     blackHeight(t.getRoot(), nullptr);
+    {
+        std::mt19937 r(44);
+        RedBlackTree d;
+        std::set<int> s;
+        for (int i = 0; i < 1500; i++) {
+            int k = r() % 121;
+            if (r() % 100 < 55) { CHECK(d.insert(k) == (s.count(k) == 0)); s.insert(k); }
+            else { CHECK(d.remove(k) == (s.count(k) == 1)); s.erase(k); }
+            if (d.getRoot()) CHECK(d.getRoot()->color == RedBlackTree::BLACK);
+            blackHeight(d.getRoot(), nullptr);
+        }
+        CHECK(d.inorder() == std::vector<int>(s.begin(), s.end()));
+    }
     return finish("red_black_tree");
 }

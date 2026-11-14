@@ -32,27 +32,29 @@
     }
   };
 
-  DSV.heapSiftDown = function (t, items, i, better, name) {
+  // op (optional): the code region that holds sift_down, when it is not the caller's.
+  DSV.heapSiftDown = function (t, items, i, better, name, op) {
     const n = items.length;
+    const step = (id, msg, vars, opts) => t.step(id, msg, vars, op ? Object.assign({ op }, opts) : opts);
     for (;;) {
       let best = i;
       const left = 2 * i + 1;
       const right = 2 * i + 2;
       const v = () => ({ i, [name]: best, left, right, n });
       const h = () => hlIdx(items, [[left, 'visited'], [right, 'visited'], [best, 'active'], [i, 'active']]);
-      t.step('sd_start', `${name} = i = ${i}; children are ${left} and ${right}.`, v(), { hl: h() });
+      step('sd_start', `${name} = i = ${i}; children are ${left} and ${right}.`, v(), { hl: h() });
       const l = left < n && better(items[left].value, items[best].value);
       if (l) best = left;
-      t.step('sd_left', left < n ? `Left child ${items[left].value} ${l ? 'wins' : 'does not win'}.` : 'No left child.', v(), { hl: h() });
+      step('sd_left', left < n ? `Left child ${items[left].value} ${l ? 'wins' : 'does not win'}.` : 'No left child.', v(), { hl: h() });
       const r = right < n && better(items[right].value, items[best].value);
       if (r) best = right;
-      t.step('sd_right', right < n ? `Right child ${items[right].value} ${r ? 'wins' : 'does not win'}.` : 'No right child.', v(), { hl: h() });
-      t.step('sd_check', best === i ? `${name} == i: the node beats both children.` : `${name} = ${best}: a child must move up.`, v(), { hl: h() });
-      if (best === i) return t.step('sd_done', 'Heap order is restored.', v(), { hl: hlIdx(items, [[i, 'found']]) });
+      step('sd_right', right < n ? `Right child ${items[right].value} ${r ? 'wins' : 'does not win'}.` : 'No right child.', v(), { hl: h() });
+      step('sd_check', best === i ? `${name} == i: the node beats both children.` : `${name} = ${best}: a child must move up.`, v(), { hl: h() });
+      if (best === i) return step('sd_done', 'Heap order is restored.', v(), { hl: hlIdx(items, [[i, 'found']]) });
       swap(items, i, best);
-      t.step('sd_swap', `Swap data[${i}] and data[${best}].`, v(), { hl: hlIdx(items, [[best, 'active'], [i, 'visited']]) });
+      step('sd_swap', `Swap data[${i}] and data[${best}].`, v(), { hl: hlIdx(items, [[best, 'active'], [i, 'visited']]) });
       i = best;
-      t.step('sd_move', `i = ${i}.`, v(), { hl: hlIdx(items, [[i, 'active']]) });
+      step('sd_move', `i = ${i}.`, v(), { hl: hlIdx(items, [[i, 'active']]) });
     }
   };
 

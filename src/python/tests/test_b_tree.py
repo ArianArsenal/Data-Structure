@@ -37,5 +37,23 @@ class TestBTree(unittest.TestCase):
         for k in keys[:100]:
             self.assertTrue(t.search(k))
 
+    def test_delete(self):
+        rng = random.Random(45)
+        t, ref = BTree(), []
+        for _ in range(1500):
+            k = rng.randint(0, 150)
+            if rng.random() < 0.55:
+                t.insert(k)
+                ref.append(k)
+            else:
+                self.assertEqual(t.delete(k), k in ref)
+                if k in ref:
+                    ref.remove(k)
+            self.assertEqual(t.to_list(), sorted(ref))
+            depths = set()
+            check(t.root, 0, depths)
+            self.assertLessEqual(len(depths), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

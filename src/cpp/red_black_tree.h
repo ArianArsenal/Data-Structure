@@ -1,4 +1,4 @@
-// Red-black tree (insert). Invariants: the root is black, a red node has no red
+// Red-black tree (insert and delete). Invariants: the root is black, a red node has no red
 // child, and every root-to-leaf path has the same number of black nodes.
 // `// @step` / `// @op` markers drive the visualizer; see tools/build_code.js.
 #pragma once
@@ -97,6 +97,76 @@ public:
     }
     // @endop
 
+    // @op delete
+    bool remove(int key) {
+        Node* z = root;                                 // @step start
+        while (z != nullptr && z->key != key) {         // @step search
+            z = key < z->key ? z->left : z->right;
+        }
+        if (z == nullptr) {                             // @step check_found
+            return false;                               // @step not_found
+        }
+        if (z->left != nullptr && z->right != nullptr) { // @step check_two
+            Node* s = z->right;                         // @step find_succ
+            while (s->left != nullptr) s = s->left;
+            z->key = s->key;                            // @step copy_key
+            z = s;
+        }
+        Node* child = z->left != nullptr ? z->left : z->right;  // @step splice
+        Node* parent = z->parent;
+        if (child != nullptr) child->parent = parent;
+        if (parent == nullptr) {
+            root = child;
+        } else if (parent->left == z) {
+            parent->left = child;
+        } else {
+            parent->right = child;
+        }
+        bool wasBlack = z->color == BLACK;              // @step check_black
+        delete z;
+        if (wasBlack) {
+            fixDelete(child, parent);                   // @step call_fix
+        }
+        return true;                                    // @step done
+    }
+
+    void fixDelete(Node* x, Node* parent) {
+        while (x != root && color(x) == BLACK) {                    // @step fd_loop
+            bool isLeft = x == parent->left;
+            Node* s = isLeft ? parent->right : parent->left;        // @step fd_sibling
+            if (s->color == RED) {                                  // @step fd_case1
+                s->color = BLACK;
+                parent->color = RED;
+                rotate(s);                                          // @step fd_rotate1
+                s = isLeft ? parent->right : parent->left;
+            }
+            Node* nearN = isLeft ? s->left : s->right;
+            Node* farN = isLeft ? s->right : s->left;               // @step fd_nephews
+            if (color(nearN) == BLACK && color(farN) == BLACK) {    // @step fd_case2
+                s->color = RED;                                     // @step fd_recolor2
+                x = parent;
+                parent = parent->parent;
+            } else {
+                if (color(farN) == BLACK) {                         // @step fd_case3
+                    nearN->color = BLACK;
+                    s->color = RED;
+                    rotate(nearN);                                  // @step fd_rotate3
+                    farN = s;
+                    s = nearN;
+                }
+                s->color = parent->color;                           // @step fd_case4
+                parent->color = BLACK;
+                farN->color = BLACK;
+                rotate(s);                                          // @step fd_rotate4
+                x = root;
+            }
+        }
+        if (x != nullptr) {                                         // @step fd_end
+            x->color = BLACK;
+        }
+    }
+    // @endop
+
     std::vector<int> inorder() const {
         std::vector<int> out;
         walk(root, out);
@@ -106,6 +176,8 @@ public:
 
 private:
     Node* root = nullptr;
+
+    static Color color(Node* n) { return n ? n->color : BLACK; }  // empty leaves count as black
 
     static void walk(Node* n, std::vector<int>& out) {
         if (!n) return;

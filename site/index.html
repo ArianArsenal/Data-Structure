@@ -50,30 +50,34 @@
         ['skip-list', 'Skip List', 'Probabilistic express lanes'],
       ]],
       ['Hashing', [
-        ['hash-table-chaining', 'Hash Table (Chaining)', 'Buckets of linked lists'],
-        ['hash-table-open-addressing', 'Hash Table (Open Addressing)', 'Linear / quadratic probing'],
+        ['hash-table-chaining', 'Hash Table (Chaining)', 'Buckets of linked lists, rehashing'],
+        ['hash-table-open-addressing', 'Hash Table (Open Addressing)', 'Linear probing, tombstones'],
         ['bloom-filter', 'Bloom Filter', 'Probabilistic membership'],
         ['lru-cache', 'LRU Cache', 'Hash map + doubly linked list'],
       ]],
       ['Trees', [
-        ['bst', 'Binary Search Tree', 'Insert, search, delete, traversal'],
-        ['avl-tree', 'AVL Tree', 'Height-balanced with rotations'],
-        ['red-black-tree', 'Red-Black Tree', 'Color rules keep it balanced'],
+        ['bst', 'Binary Search Tree', 'Insert, delete, search, successor'],
+        ['avl-tree', 'AVL Tree', 'Insert and delete with rotations'],
+        ['red-black-tree', 'Red-Black Tree', 'Insert and delete, recoloring'],
         ['splay-tree', 'Splay Tree', 'Recently used keys move to root'],
-        ['b-tree', 'B-Tree', 'Wide nodes, node splitting'],
+        ['b-tree', 'B-Tree', 'Split, borrow and merge'],
         ['trie', 'Trie', 'Prefix tree for strings'],
       ]],
       ['Heaps & range queries', [
-        ['binary-heap', 'Binary Heap', 'Sift up / sift down'],
+        ['binary-heap', 'Binary Heap', 'Sift up / down, build heap'],
         ['priority-queue', 'Priority Queue', 'Heap-backed queue'],
         ['segment-tree', 'Segment Tree', 'Range sum, point update'],
         ['fenwick-tree', 'Fenwick Tree', 'Prefix sums with lowbit'],
       ]],
-      ['Sets, strings & graphs', [
+      ['Sets & strings', [
         ['union-find', 'Union-Find', 'Union by rank, path compression'],
         ['suffix-array', 'Suffix Array', 'Sorted suffixes + LCP'],
+      ]],
+      ['Graphs', [
         ['graph-adjacency-list', 'Graph (Adjacency List)', 'Edges, BFS, DFS'],
         ['graph-adjacency-matrix', 'Graph (Adjacency Matrix)', 'Edges, BFS, DFS'],
+        ['weighted-graph', 'Weighted Graph', 'Dijkstra, Kruskal MST'],
+        ['directed-graph', 'Directed Graph', 'Topological sort, cycle detection'],
       ]],
     ];
     const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));

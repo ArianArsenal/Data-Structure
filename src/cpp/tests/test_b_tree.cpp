@@ -1,6 +1,7 @@
 #include "../b_tree.h"
 
 #include <algorithm>
+#include <set>
 #include <random>
 
 #include "check.h"
@@ -16,5 +17,20 @@ int main() {
     std::sort(keys.begin(), keys.end());
     CHECK(r.toVector() == keys);
     for (int i = 0; i < 100; i++) CHECK(r.search(keys[i]));
+    {
+        std::mt19937 r(45);
+        BTree d;
+        std::multiset<int> s;
+        for (int i = 0; i < 1500; i++) {
+            int k = r() % 151;
+            if (r() % 100 < 55) { d.insert(k); s.insert(k); }
+            else {
+                auto it = s.find(k);
+                CHECK(d.remove(k) == (it != s.end()));
+                if (it != s.end()) s.erase(it);
+            }
+            CHECK(d.toVector() == std::vector<int>(s.begin(), s.end()));
+        }
+    }
     return finish("b_tree");
 }

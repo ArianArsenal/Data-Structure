@@ -1,5 +1,6 @@
 // Hash map with separate chaining: each bucket is a linked list of entries.
-// Keys are non-negative integers; the hash is key % capacity.
+// Keys are non-negative integers; the hash is key % capacity. When size exceeds
+// capacity (load factor > 1) the table doubles and every entry is rehashed.
 // `// @step` / `// @op` markers drive the visualizer; see tools/build_code.js.
 public class HashTableChaining {
     static class Entry {
@@ -14,7 +15,7 @@ public class HashTableChaining {
         }
     }
 
-    private final Entry[] buckets;
+    private Entry[] buckets;
     private int size;
 
     public HashTableChaining() {
@@ -38,6 +39,24 @@ public class HashTableChaining {
         }
         buckets[i] = new Entry(key, value, buckets[i]);  // @step prepend
         size++;                                          // @step done
+        if (size > buckets.length) {                     // @step check_load
+            resize(2 * buckets.length);                  // @step grow
+        }
+    }
+
+    private void resize(int capacity) {
+        Entry[] old = buckets;                          // @step rs_old
+        buckets = new Entry[capacity];                  // @step rs_alloc
+        for (Entry head : old) {                        // @step rs_bucket
+            Entry curr = head;
+            while (curr != null) {                      // @step rs_loop
+                Entry nxt = curr.next;                  // @step rs_save
+                int i = curr.key % capacity;            // @step rs_hash
+                curr.next = buckets[i];                 // @step rs_move
+                buckets[i] = curr;
+                curr = nxt;
+            }
+        }
     }
     // @endop
 
@@ -79,5 +98,9 @@ public class HashTableChaining {
 
     public int size() {
         return size;
+    }
+
+    public int capacity() {
+        return buckets.length;
     }
 }

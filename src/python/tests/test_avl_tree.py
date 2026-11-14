@@ -34,5 +34,23 @@ class TestAVLTree(unittest.TestCase):
         self.assertEqual(t.inorder(), sorted(set(keys)))
         check(t.root)
 
+    def test_delete(self):
+        rng = random.Random(43)
+        t, ref = AVLTree(), set()
+        for _ in range(1500):
+            k = rng.randint(0, 120)
+            if rng.random() < 0.55:
+                t.insert(k)
+                ref.add(k)
+            else:
+                t.delete(k)
+                ref.discard(k)
+        self.assertEqual(t.inorder(), sorted(ref))
+        check(t.root)
+        for k in list(ref):
+            t.delete(k)
+        self.assertIsNone(t.root)
+
+
 if __name__ == "__main__":
     unittest.main()

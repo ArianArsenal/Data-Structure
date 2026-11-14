@@ -14,6 +14,16 @@ public class TestAVLTree {
         TreeSet<Integer> ref = new TreeSet<>();
         for (int i = 0; i < 400; i++) { int k = rng.nextInt(501); r.insert(k); ref.add(k); }
         Check.check(r.inorder().equals(new ArrayList<>(ref)) && r.rootHeight() <= 13, "random");
+        Random r2 = new Random(43);
+        AVLTree d = new AVLTree();
+        TreeSet<Integer> s = new TreeSet<>();
+        for (int i = 0; i < 1500; i++) {
+            int k = r2.nextInt(121);
+            if (r2.nextInt(100) < 55) { d.insert(k); s.add(k); }
+            else { d.delete(k); s.remove(k); }
+        }
+        Check.check(d.inorder().equals(new ArrayList<>(s)) && d.rootHeight() <= 9, "delete");
+
         Check.finish("AVLTree");
     }
 }

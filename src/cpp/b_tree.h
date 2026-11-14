@@ -1,5 +1,7 @@
 // B-tree with minimum degree T = 2 (a 2-3-4 tree): every node holds 1 to 3
 // keys. Insert splits full nodes on the way down, so the tree only grows at the root.
+// Delete makes sure every node it enters has at least T keys (by borrowing from a
+// sibling or merging), so it never has to walk back up.
 // `// @step` / `// @op` markers drive the visualizer; see tools/build_code.js.
 #pragma once
 #include <vector>
@@ -87,6 +89,99 @@ public:
         }
         parent->keys.insert(parent->keys.begin() + i, mid);             // @step sp_lift
         parent->children.insert(parent->children.begin() + i + 1, right); // @step sp_link
+    }
+    // @endop
+
+    // @op delete
+    bool remove(int key) {
+        bool removed = removeFrom(root, key);           // @step call_root
+        if (root->keys.empty() && !root->leaf) {        // @step check_root
+            BNode* old = root;
+            root = root->children[0];                   // @step shrink_root
+            old->children.clear();
+            delete old;
+        }
+        return removed;
+    }
+
+    bool removeFrom(BNode* node, int key) {
+        int i = 0;                                                      // @step scan_start
+        while (i < (int)node->keys.size() && key > node->keys[i]) {     // @step scan
+            i++;
+        }
+        if (i < (int)node->keys.size() && node->keys[i] == key) {       // @step check_here
+            if (node->leaf) {                                           // @step check_leaf
+                node->keys.erase(node->keys.begin() + i);               // @step remove_leaf
+                return true;
+            }
+            if ((int)node->children[i]->keys.size() >= T) {             // @step case_pred
+                BNode* pred = node->children[i];                        // @step find_pred
+                while (!pred->leaf) pred = pred->children.back();
+                node->keys[i] = pred->keys.back();                      // @step use_pred
+                return removeFrom(node->children[i], node->keys[i]);    // @step recurse_pred
+            }
+            if ((int)node->children[i + 1]->keys.size() >= T) {         // @step case_succ
+                BNode* succ = node->children[i + 1];                    // @step find_succ
+                while (!succ->leaf) succ = succ->children.front();
+                node->keys[i] = succ->keys.front();                     // @step use_succ
+                return removeFrom(node->children[i + 1], node->keys[i]); // @step recurse_succ
+            }
+            merge(node, i);                                             // @step merge_here
+            return removeFrom(node->children[i], key);                  // @step recurse_merged
+        }
+        if (node->leaf) {                                               // @step check_missing
+            return false;                                               // @step not_found
+        }
+        if ((int)node->children[i]->keys.size() == T - 1) {             // @step check_thin
+            i = fill(node, i);                                          // @step fill
+        }
+        return removeFrom(node->children[i], key);                      // @step descend
+    }
+
+    // Give child i at least T keys; return the index of the child to enter.
+    int fill(BNode* node, int i) {
+        BNode* child = node->children[i];
+        if (i > 0 && (int)node->children[i - 1]->keys.size() >= T) {   // @step borrow_left_check
+            BNode* left = node->children[i - 1];
+            child->keys.insert(child->keys.begin(), node->keys[i - 1]); // @step borrow_left
+            node->keys[i - 1] = left->keys.back();
+            left->keys.pop_back();
+            if (!left->leaf) {
+                child->children.insert(child->children.begin(), left->children.back());
+                left->children.pop_back();
+            }
+            return i;
+        }
+        if (i < (int)node->keys.size() && (int)node->children[i + 1]->keys.size() >= T) {  // @step borrow_right_check
+            BNode* right = node->children[i + 1];
+            child->keys.push_back(node->keys[i]);                       // @step borrow_right
+            node->keys[i] = right->keys.front();
+            right->keys.erase(right->keys.begin());
+            if (!right->leaf) {
+                child->children.push_back(right->children.front());
+                right->children.erase(right->children.begin());
+            }
+            return i;
+        }
+        if (i < (int)node->keys.size()) {                               // @step merge_check
+            merge(node, i);                                             // @step merge_right
+            return i;
+        }
+        merge(node, i - 1);                                             // @step merge_left
+        return i - 1;
+    }
+
+    // Merge child i, key i and child i + 1 into child i.
+    void merge(BNode* node, int i) {
+        BNode* left = node->children[i];                                // @step mg_pick
+        BNode* right = node->children[i + 1];
+        left->keys.push_back(node->keys[i]);                            // @step mg_pull
+        node->keys.erase(node->keys.begin() + i);
+        left->keys.insert(left->keys.end(), right->keys.begin(), right->keys.end());  // @step mg_join
+        left->children.insert(left->children.end(), right->children.begin(), right->children.end());
+        node->children.erase(node->children.begin() + i + 1);           // @step mg_unlink
+        right->children.clear();
+        delete right;
     }
     // @endop
 

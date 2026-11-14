@@ -33,6 +33,11 @@ public class TestBST {
             Check.check(t.inorder().equals(new ArrayList<>(ref)), "random step " + i);
         }
 
+        BST q = new BST(50, 30, 70, 20, 40, 60, 80);
+        Check.check(q.minimum() == 20 && q.maximum() == 80, "min/max");
+        Check.check(q.successor(40) == 50 && q.successor(45) == 50 && q.successor(80) == null && q.successor(5) == 20, "successor");
+        Check.check(new BST().minimum() == null, "empty min");
+
         Check.finish("BST");
     }
 }

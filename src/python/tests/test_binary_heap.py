@@ -28,5 +28,16 @@ class TestBinaryHeap(unittest.TestCase):
                 heapq.heappush(ref, v)
             self.assertEqual(len(h), len(ref))
 
+    def test_build_heap(self):
+        rng = random.Random(42)
+        for _ in range(50):
+            vals = [rng.randint(0, 99) for _ in range(rng.randint(0, 30))]
+            h = BinaryHeap()
+            h.build_heap(vals)
+            d = h.data
+            self.assertTrue(all(d[(i - 1) // 2] <= d[i] for i in range(1, len(d))))
+            self.assertEqual([h.extract_min() for _ in range(len(vals))], sorted(vals))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -8,6 +8,18 @@
   const vid = (i) => 'v' + i;
   const eid = (a, b) => `e:${Math.min(a, b)}-${Math.max(a, b)}`;
 
+  // Vertex positions on a circle, vertex 0 at the top. Returns { R, at(i) }.
+  DSV.circle = function (n) {
+    const R = 50 + n * 16;
+    return {
+      R,
+      at: (i) => {
+        const a = ((-90 + (i * 360) / n) * Math.PI) / 180;
+        return { x: Math.cos(a) * R, y: Math.sin(a) * R };
+      },
+    };
+  };
+
   // "6: 0-1 0-2 1-3" -> { n: 6, edges: [[0,1],[0,2],[1,3]] }
   DSV.parseGraph = function (text) {
     const m = /^\s*(\d+)\s*(?::(.*))?$/.exec(String(text));

@@ -1,5 +1,6 @@
 // Hash map with separate chaining: each bucket is a linked list of entries.
-// Keys are non-negative integers; the hash is key % capacity.
+// Keys are non-negative integers; the hash is key % capacity. When size exceeds
+// capacity (load factor > 1) the table doubles and every entry is rehashed.
 // `// @step` / `// @op` markers drive the visualizer; see tools/build_code.js.
 #pragma once
 #include <optional>
@@ -44,6 +45,24 @@ public:
         }
         buckets[i] = new Entry(key, value, buckets[i]);  // @step prepend
         size++;                                          // @step done
+        if (size > (int)buckets.size()) {                // @step check_load
+            resize(2 * (int)buckets.size());             // @step grow
+        }
+    }
+
+    void resize(int capacity) {
+        std::vector<Entry*> old = std::move(buckets);   // @step rs_old
+        buckets.assign(capacity, nullptr);              // @step rs_alloc
+        for (Entry* head : old) {                       // @step rs_bucket
+            Entry* curr = head;
+            while (curr != nullptr) {                   // @step rs_loop
+                Entry* nxt = curr->next;                // @step rs_save
+                int i = curr->key % capacity;           // @step rs_hash
+                curr->next = buckets[i];                // @step rs_move
+                buckets[i] = curr;
+                curr = nxt;
+            }
+        }
     }
     // @endop
 
@@ -85,6 +104,7 @@ public:
     // @endop
 
     int getSize() const { return size; }
+    int capacity() const { return (int)buckets.size(); }
 
 private:
     std::vector<Entry*> buckets;

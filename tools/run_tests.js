@@ -29,9 +29,11 @@ const suites = {
   cpp() {
     fs.mkdirSync(path.join(BUILD, 'cpp'), { recursive: true });
     let ok = true;
+    // Static linking on Windows: MinGW runtime DLLs are often not on PATH.
+    const flags = ['-std=c++17', '-Wall', '-Wextra', '-O1'].concat(process.platform === 'win32' ? ['-static'] : []);
     for (const f of list('src/cpp/tests', /^test_.*\.cpp$/)) {
       const out = path.join(BUILD, 'cpp', f.replace(/\.cpp$/, exe));
-      if (!run('g++', ['-std=c++17', '-Wall', '-Wextra', '-O1', '-static', '-o', out, path.join('src/cpp/tests', f)])) {
+      if (!run('g++', flags.concat(['-o', out, path.join('src/cpp/tests', f)]))) {
         ok = false;
         continue;
       }

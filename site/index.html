@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DS Visualizer</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 16px 60px; }
+    .hero h2 { font-size: 26px; margin: 0 0 6px; }
+    .hero p { color: var(--muted); margin: 0 0 26px; max-width: 680px; }
+    h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 28px 0 10px; font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+    .tile { display: block; padding: 14px 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
+    a.tile:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .tile b { display: block; font-weight: 600; margin-bottom: 4px; }
+    .tile span { font-size: 12.5px; color: var(--muted); }
+    .tile.soon { opacity: .5; }
+    .tile.soon b::after { content: 'soon'; font-size: 10px; font-weight: 600; margin-left: 8px; padding: 1px 6px; border-radius: 99px; border: 1px solid var(--border); color: var(--muted); vertical-align: 2px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Data Structure Visualizer</h1>
+    <div class="spacer"></div>
+    <button class="iconbtn theme" title="Toggle light / dark">◐</button>
+  </header>
+  <main class="wrap">
+    <section class="hero">
+      <h2>See the code run.</h2>
+      <p>Every structure shows the real Python, C++ or Java code next to an animated picture of memory. Step through it line by line or let it play, and enter your own starting values.</p>
+    </section>
+    <div id="cats"></div>
+  </main>
+  <script src="js/core/dsv.js"></script>
+  <script src="js/core/app.js"></script>
+  <script src="js/generated/ready.js"></script>
+  <script>
+    const READY = new Set(window.DS_READY || []);
+    const CATALOG = [
+      ['Linear', [
+        ['static-array', 'Static Array', 'Index, insert, delete with shifting'],
+        ['dynamic-array', 'Dynamic Array', 'Amortized growth by doubling'],
+        ['singly-linked-list', 'Singly Linked List', 'Insert, delete, search, reverse'],
+        ['doubly-linked-list', 'Doubly Linked List', 'Links in both directions'],
+        ['circular-linked-list', 'Circular Linked List', 'Tail wraps to head'],
+        ['stack', 'Stack', 'LIFO push / pop'],
+        ['queue', 'Queue', 'FIFO on a circular buffer'],
+        ['deque', 'Deque', 'Push and pop at both ends'],
+        ['skip-list', 'Skip List', 'Probabilistic express lanes'],
+      ]],
+      ['Hashing', [
+        ['hash-table-chaining', 'Hash Table (Chaining)', 'Buckets of linked lists'],
+        ['hash-table-open-addressing', 'Hash Table (Open Addressing)', 'Linear / quadratic probing'],
+        ['bloom-filter', 'Bloom Filter', 'Probabilistic membership'],
+        ['lru-cache', 'LRU Cache', 'Hash map + doubly linked list'],
+      ]],
+      ['Trees', [
+        ['bst', 'Binary Search Tree', 'Insert, search, delete, traversal'],
+        ['avl-tree', 'AVL Tree', 'Height-balanced with rotations'],
+        ['red-black-tree', 'Red-Black Tree', 'Color rules keep it balanced'],
+        ['splay-tree', 'Splay Tree', 'Recently used keys move to root'],
+        ['b-tree', 'B-Tree', 'Wide nodes, node splitting'],
+        ['trie', 'Trie', 'Prefix tree for strings'],
+      ]],
+      ['Heaps & range queries', [
+        ['binary-heap', 'Binary Heap', 'Sift up / sift down'],
+        ['priority-queue', 'Priority Queue', 'Heap-backed queue'],
+        ['segment-tree', 'Segment Tree', 'Range sum, point update'],
+        ['fenwick-tree', 'Fenwick Tree', 'Prefix sums with lowbit'],
+      ]],
+      ['Sets, strings & graphs', [
+        ['union-find', 'Union-Find', 'Union by rank, path compression'],
+        ['suffix-array', 'Suffix Array', 'Sorted suffixes + LCP'],
+        ['graph-adjacency-list', 'Graph (Adjacency List)', 'Edges, BFS, DFS'],
+        ['graph-adjacency-matrix', 'Graph (Adjacency Matrix)', 'Edges, BFS, DFS'],
+      ]],
+    ];
+    const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    document.getElementById('cats').innerHTML = CATALOG.map(([cat, items]) =>
+      `<h3>${cat}</h3><div class="grid">` + items.map(([id, title, sub]) => READY.has(id)
+        ? `<a class="tile" href="ds/${id}.html"><b>${esc(title)}</b><span>${esc(sub)}</span></a>`
+        : `<div class="tile soon"><b>${esc(title)}</b><span>${esc(sub)}</span></div>`).join('') + '</div>'
+    ).join('');
+    DSV.applyTheme();
+    document.querySelector('.theme').addEventListener('click', DSV.toggleTheme);
+  </script>
+</body>
+</html>
